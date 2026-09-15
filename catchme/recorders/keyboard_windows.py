@@ -14,6 +14,7 @@ import time
 from pynput import keyboard
 
 from ..recorder import Emit
+from .textdiff import diff_added, has_non_ascii
 
 log = logging.getLogger(__name__)
 
@@ -61,6 +62,14 @@ _MOD_KEYS = frozenset(
 
 _TEXT_WINDOW = 0.5
 _ZWS = "\u200b"
+
+# Adaptive UIA polling. Each poll pulls the focused field's entire value over
+# COM, so polling fast while the user isn't typing taxes the foreground app
+# for nothing.
+_UIA_POLL_ACTIVE = 0.08
+_UIA_POLL_IDLE = 0.4
+_UIA_ACTIVE_WINDOW = 2.0
+
 _UIA_ValuePatternId = 10002
 
 
@@ -117,6 +126,11 @@ class KeyboardRecorder:
                     rec._pressed_mods.add(key)
                     return
 
+                # Ordinary printable keys are reported by the UIA monitor, so
+                # return before doing any modifier bookkeeping for them.
+                if not rec._pressed_mods and key not in _SPECIAL_KEYS:
+                    return
+
                 mods = _current_mods(rec._pressed_mods)
                 has_mod = bool({"ctrl", "alt", "cmd"} & set(mods))
 
@@ -147,7 +161,8 @@ class KeyboardRecorder:
                 self._poll_uia(uia, vp_cls, emit)
             except Exception:
                 pass
-            time.sleep(0.08)
+            typing = (time.monotonic() - self._last_keydown) < _UIA_ACTIVE_WINDOW
+            time.sleep(_UIA_POLL_ACTIVE if typing else _UIA_POLL_IDLE)
 
     def _poll_uia(self, uia, vp_cls, emit: Emit) -> None:
         try:
@@ -184,15 +199,15 @@ class KeyboardRecorder:
 
         # Detect IME composing via zero-width-space heuristic
         if self._prev_text is not None and val != self._prev_text:
-            added = _diff(self._prev_text, val)
+            added = diff_added(self._prev_text, val)
             if _ZWS in added:
                 self._composing = True
                 return
 
         if self._composing:
             if self._prev_text is not None and val != self._prev_text:
-                added = _diff(self._prev_text, val)
-                if added and _has_non_ascii(added) and _ZWS not in added:
+                added = diff_added(self._prev_text, val)
+                if added and has_non_ascii(added) and _ZWS not in added:
                     emit({"key": added, "modifiers": [], "type": "text"})
                     self._prev_text = val
                     self._composing = False
@@ -204,7 +219,7 @@ class KeyboardRecorder:
         if self._prev_text is not None and val != self._prev_text:
             recently_typed = (time.monotonic() - self._last_keydown) < _TEXT_WINDOW
             if recently_typed:
-                added = _diff(self._prev_text, val)
+                added = diff_added(self._prev_text, val)
                 if added and 0 < len(added) <= 200:
                     emit({"key": added, "modifiers": [], "type": "text"})
         self._prev_text = val
@@ -231,19 +246,3 @@ def _current_mods(pressed: set) -> list[str]:
     if keyboard.Key.shift_l in pressed or keyboard.Key.shift_r in pressed:
         m.append("shift")
     return m
-
-
-def _has_non_ascii(text: str) -> bool:
-    return any(ord(ch) > 127 for ch in text)
-
-
-def _diff(old: str, new: str) -> str:
-    """Extract text that was added when old changed to new."""
-    i = 0
-    while i < len(old) and i < len(new) and old[i] == new[i]:
-        i += 1
-    j_old, j_new = len(old) - 1, len(new) - 1
-    while j_old >= i and j_new >= i and old[j_old] == new[j_new]:
-        j_old -= 1
-        j_new -= 1
-    return new[i : j_new + 1]
