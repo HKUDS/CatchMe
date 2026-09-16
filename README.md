@@ -277,6 +277,7 @@ pip install -e .
 
 > **macOS** — grant *Accessibility*, *Input Monitoring*, *Screen Recording* in System Settings → Privacy & Security
 > **Windows** — run as Administrator for global input monitoring
+> **Linux** — X11 only. Install `xdotool` and `xprop` for window tracking; add `pip install -e ".[linux]"` for mouse capture (builds `evdev`, which needs kernel headers). Keyboard capture is not implemented on Linux.
 
 ### ⚡ Init
 

@@ -1,6 +1,11 @@
 # Runtime data (screenshots, database, trees, logs)
 data/
 
+# Local scratch & personal research (not part of the project)
+output/
+research/
+tmp/
+
 # User config (contains API keys)
 data/config.json
 catchme/services/config.json
