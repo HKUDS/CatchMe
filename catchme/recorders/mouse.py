@@ -10,21 +10,36 @@ On scroll sessions: capture "scroll_start" on first scroll, then
 from __future__ import annotations
 
 import json
+import logging
 import threading
 import time
 
 import mss
 from PIL import Image, ImageDraw, ImageFont
-from pynput import mouse
 
 from ..config import Config
 from ..recorder import Emit
 
-_BUTTON_NAMES = {
-    mouse.Button.left: "left",
-    mouse.Button.right: "right",
-    mouse.Button.middle: "middle",
-}
+try:
+    from pynput import mouse
+except Exception:  # pragma: no cover - depends on the host, not on our code
+    # pynput requires a display server (and a compiled evdev on Linux). Without
+    # one it raises at import time, which would take `import catchme` down with
+    # it. Degrade to a no-op recorder instead, mirroring the keyboard recorder's
+    # stub on unsupported platforms.
+    mouse = None  # type: ignore[assignment]
+
+log = logging.getLogger(__name__)
+
+_BUTTON_NAMES = (
+    {
+        mouse.Button.left: "left",
+        mouse.Button.right: "right",
+        mouse.Button.middle: "middle",
+    }
+    if mouse is not None
+    else {}
+)
 
 _MONITOR_REFRESH = 30.0
 _CROSSHAIR_COLOR = (255, 40, 40)
@@ -239,6 +254,9 @@ class MouseRecorder:
     # ── Lifecycle ──
 
     def start(self, emit: Emit) -> None:
+        if mouse is None:
+            log.warning("mouse recorder disabled: pynput unavailable (no display server?)")
+            return
         self._emit = emit
         self._refresh_monitors()
 
