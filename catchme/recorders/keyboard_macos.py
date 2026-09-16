@@ -23,6 +23,7 @@ from ApplicationServices import (
 )
 
 from ..recorder import Emit
+from .textdiff import diff_added, has_non_ascii
 
 _KEYCODE_NAMES = {
     36: "enter",
@@ -62,6 +63,13 @@ _MOD_MASK = (
 _AX_TEXT_WINDOW = 0.5
 _ZWS = "\u200b"
 
+# Adaptive AX polling. Each poll pulls the focused field's entire value across
+# a process boundary, so polling fast while the user isn't typing taxes the
+# foreground app for nothing.
+_AX_POLL_ACTIVE = 0.08
+_AX_POLL_IDLE = 0.4
+_AX_ACTIVE_WINDOW = 2.0
+
 
 class KeyboardRecorder:
     kind = "keyboard"
@@ -80,21 +88,30 @@ class KeyboardRecorder:
         rec = self
 
         def _on_key(proxy, etype, event, refcon):
+            # macOS holds up key delivery until this callback returns, so it has
+            # to stay cheap. Read the event with plain CGEvent calls and bail out
+            # before the costly NSEvent bridge for ordinary printable keys —
+            # those are reported by the AX monitor, not from here.
             try:
+                rec._last_keydown = time.monotonic()
+
+                flags = Quartz.CGEventGetFlags(event)
+                has_mod = bool(flags & _MOD_MASK)
+                keycode = int(
+                    Quartz.CGEventGetIntegerValueField(event, Quartz.kCGKeyboardEventKeycode)
+                )
+                if not has_mod and keycode not in _KEYCODE_NAMES:
+                    return event
+
                 ns = NSEvent.eventWithCGEvent_(event)
                 if ns is None:
                     return event
                 chars = ns.characters() or ""
-                flags = Quartz.CGEventGetFlags(event)
-                keycode = ns.keyCode()
-                has_mod = bool(flags & _MOD_MASK)
-
-                rec._last_keydown = time.monotonic()
 
                 if has_mod:
                     name = _KEYCODE_NAMES.get(keycode, chars) if not chars.isprintable() else chars
                     emit({"key": name, "modifiers": _mods(flags, chars), "type": "shortcut"})
-                elif keycode in _KEYCODE_NAMES:
+                else:
                     emit(
                         {
                             "key": _KEYCODE_NAMES[keycode],
@@ -130,7 +147,8 @@ class KeyboardRecorder:
                     self._poll_ax(system, emit)
                 except Exception:
                     pass
-                time.sleep(0.08)
+                typing = (time.monotonic() - self._last_keydown) < _AX_ACTIVE_WINDOW
+                time.sleep(_AX_POLL_ACTIVE if typing else _AX_POLL_IDLE)
 
         threading.Thread(target=_run_tap, daemon=True).start()
         threading.Thread(target=_run_ax, daemon=True).start()
@@ -166,15 +184,15 @@ class KeyboardRecorder:
             return
 
         if self._prev_text is not None and val != self._prev_text:
-            added = _diff(self._prev_text, val)
+            added = diff_added(self._prev_text, val)
             if _ZWS in added:
                 self._composing = True
                 return
 
         if self._composing:
             if self._prev_text is not None and val != self._prev_text:
-                added = _diff(self._prev_text, val)
-                if added and _has_non_ascii(added) and _ZWS not in added:
+                added = diff_added(self._prev_text, val)
+                if added and has_non_ascii(added) and _ZWS not in added:
                     emit({"key": added, "modifiers": [], "type": "text"})
                     self._prev_text = val
                     self._composing = False
@@ -186,7 +204,7 @@ class KeyboardRecorder:
         if self._prev_text is not None and val != self._prev_text:
             recently_typed = (time.monotonic() - self._last_keydown) < _AX_TEXT_WINDOW
             if recently_typed:
-                added = _diff(self._prev_text, val)
+                added = diff_added(self._prev_text, val)
                 if added and 0 < len(added) <= 200:
                     emit({"key": added, "modifiers": [], "type": "text"})
         self._prev_text = val
@@ -196,10 +214,6 @@ class KeyboardRecorder:
         if self._loop:
             Quartz.CFRunLoopStop(self._loop)
             self._loop = None
-
-
-def _has_non_ascii(text: str) -> bool:
-    return any(ord(ch) > 127 for ch in text)
 
 
 def _mods(flags: int, chars: str) -> list[str]:
@@ -220,15 +234,3 @@ def _same_element(a, b) -> bool:
         return a == b
     except Exception:
         return False
-
-
-def _diff(old: str, new: str) -> str:
-    """Extract text that was added when old changed to new."""
-    i = 0
-    while i < len(old) and i < len(new) and old[i] == new[i]:
-        i += 1
-    j_old, j_new = len(old) - 1, len(new) - 1
-    while j_old >= i and j_new >= i and old[j_old] == new[j_new]:
-        j_old -= 1
-        j_new -= 1
-    return new[i : j_new + 1]

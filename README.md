@@ -302,6 +302,7 @@ catchme ask -- "What am I doing today?"
 | `catchme awake`             | Start the recording daemon                             |
 | `catchme web [-p PORT]`     | Launch web dashboard (default `http://127.0.0.1:8765`) |
 | `catchme ask -- "question"` | Query your activity in natural language                |
+| `catchme mcp`               | Start MCP stdio server (Claude Desktop, Cursor, …)     |
 | `catchme cost`              | Show LLM token usage (last 10 min / today / all time)  |
 | `catchme disk`              | Show storage breakdown & event count                   |
 | `catchme ram`               | Show memory usage of running processes                 |
@@ -314,7 +315,8 @@ catchme ask -- "What am I doing today?"
 CatchMe ships as an agent-compatible skill for CLI agents (OpenClaw, NanoBot, Claude, Cursor, etc.).
 
 **🪶 Agent Integration:**
-Run CatchMe independently. Your agents query memories via CLI commands only.
+
+**Option A — Light Skill** (you run CatchMe; agents query memories via CLI commands only):
 
 ```bash
 # 1. Start CatchMe yourself
@@ -329,6 +331,39 @@ cp CATCHME-light.md ~/.cursor/skills/catchme/SKILL.md
 ```bash
 cp CATCHME-full.md ~/.cursor/skills/catchme/SKILL.md
 ```
+
+### 🔌 MCP Server
+
+Expose your activity tree to any MCP host — Claude Desktop, Cursor, Hermes, etc. — over stdio:
+
+```bash
+pip install 'catchme[mcp]'   # MCP support ships as an optional extra
+catchme mcp                  # start the stdio server
+```
+
+Register it with your host. For Claude Desktop, add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "catchme": {
+      "command": "catchme",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+Your agent then gets four tools:
+
+| Tool                            | Description                                     |
+| ------------------------------- | ----------------------------------------------- |
+| `search_activity(query, date?)` | Natural-language Q&A over your screen history   |
+| `list_days()`                   | All recorded days with top-level summaries      |
+| `get_session(session_id)`       | Full detail for one session node                |
+| `get_tree(date)`                | Raw activity tree JSON for a given date         |
+
+> Keep `catchme awake` running — the MCP server reads the activity tree it builds.
 
 ### 🔧 Integrate into your current workflow
 
