@@ -201,6 +201,7 @@ CatchMe はバックグラウンド要約とインテリジェント検索に LL
 | プロバイダ                 | 設定名                    | デフォルト API URL                                       | キー取得                                                              |
 | ------------------------- | ------------------------ | ------------------------------------------------------- | -------------------------------------------------------------------- |
 | **OpenRouter** (gateway)  | `openrouter`             | `https://openrouter.ai/api/v1`                          | [openrouter.ai/keys](https://openrouter.ai/keys)                     |
+| **Requesty** (gateway)    | `requesty`               | `https://router.requesty.ai/v1`                         | [app.requesty.ai/api-keys](https://app.requesty.ai/api-keys)         |
 | **AiHubMix** (gateway)    | `aihubmix`               | `https://aihubmix.com/v1`                               | [aihubmix.com](https://aihubmix.com)                                 |
 | **SiliconFlow** (gateway) | `siliconflow`            | `https://api.siliconflow.cn/v1`                         | [cloud.siliconflow.cn](https://cloud.siliconflow.cn)                 |
 | **OpenAI**                | `openai`                 | `https://api.openai.com/v1`                             | [platform.openai.com](https://platform.openai.com/api-keys)          |

@@ -35,6 +35,7 @@ def _p(msg: str) -> None:
 
 _DEFAULT_MODELS: dict[str, str] = {
     "openrouter": "google/gemini-3-flash-preview",
+    "requesty": "google/gemini-3-flash-preview",
     "aihubmix": "google/gemini-3-flash-preview",
     "siliconflow": "Qwen/Qwen3-8B",
     "openai": "gpt-4o-mini",
@@ -102,14 +103,25 @@ def cmd_init() -> None:
     # ── provider selection ──
     _p(f"  {BOLD}Select LLM provider:{RST}\n")
     groups = [
-        ("Gateways", [p for p in PROVIDERS if p[0] in ("openrouter", "aihubmix", "siliconflow")]),
+        (
+            "Gateways",
+            [p for p in PROVIDERS if p[0] in ("openrouter", "requesty", "aihubmix", "siliconflow")],
+        ),
         (
             "Cloud",
             [
                 p
                 for p in PROVIDERS
                 if p[0]
-                not in ("openrouter", "aihubmix", "siliconflow", "ollama", "vllm", "lmstudio")
+                not in (
+                    "openrouter",
+                    "requesty",
+                    "aihubmix",
+                    "siliconflow",
+                    "ollama",
+                    "vllm",
+                    "lmstudio",
+                )
             ],
         ),
         ("Local", [p for p in PROVIDERS if p[0] in ("ollama", "vllm", "lmstudio")]),

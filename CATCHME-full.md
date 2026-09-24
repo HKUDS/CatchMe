@@ -75,6 +75,7 @@ Recommended defaults per provider:
 | Provider | `provider` value | Default `model` | Needs `api_key`? |
 |----------|-----------------|-----------------|-----------------|
 | OpenRouter | `openrouter` | `google/gemini-3-flash-preview` | Yes |
+| Requesty | `requesty` | `google/gemini-3-flash-preview` | Yes |
 | OpenAI | `openai` | `gpt-4o-mini` | Yes |
 | Anthropic | `anthropic` | `claude-sonnet-4-20250514` | Yes |
 | DeepSeek | `deepseek` | `deepseek-chat` | Yes |
