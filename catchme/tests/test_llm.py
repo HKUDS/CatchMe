@@ -433,6 +433,10 @@ class TestProviders:
         url = get_default_api_url("openrouter")
         assert url == "https://openrouter.ai/api/v1"
 
+    def test_get_default_api_url_requesty(self):
+        url = get_default_api_url("requesty")
+        assert url == "https://router.requesty.ai/v1"
+
     def test_get_default_api_url_unknown(self):
         assert get_default_api_url("nonexistent_provider_xyz") is None
 

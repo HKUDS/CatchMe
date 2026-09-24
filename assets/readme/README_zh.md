@@ -201,6 +201,7 @@ CatchMe 需要 LLM 进行后台摘要与智能检索。使用 **catchme init**�
 | 服务商                     | 配置名称                   | 默认 API 地址                                           | 获取密钥                                                             |
 | ------------------------- | ------------------------ | ------------------------------------------------------- | -------------------------------------------------------------------- |
 | **OpenRouter**（聚合网关）  | `openrouter`             | `https://openrouter.ai/api/v1`                          | [openrouter.ai/keys](https://openrouter.ai/keys)                     |
+| **Requesty**（聚合网关）    | `requesty`               | `https://router.requesty.ai/v1`                         | [app.requesty.ai/api-keys](https://app.requesty.ai/api-keys)         |
 | **AiHubMix**（聚合网关）   | `aihubmix`               | `https://aihubmix.com/v1`                               | [aihubmix.com](https://aihubmix.com)                                 |
 | **硅基流动**（聚合网关）    | `siliconflow`            | `https://api.siliconflow.cn/v1`                         | [cloud.siliconflow.cn](https://cloud.siliconflow.cn)                 |
 | **OpenAI**                | `openai`                 | `https://api.openai.com/v1`                             | [platform.openai.com](https://platform.openai.com/api-keys)          |

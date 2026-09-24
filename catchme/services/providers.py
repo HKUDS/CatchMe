@@ -11,6 +11,7 @@ from __future__ import annotations
 PROVIDERS: tuple[tuple[str, str, str, str], ...] = (
     # Gateways (route any model from any vendor)
     ("openrouter", "OpenRouter", "https://openrouter.ai/api/v1", "https://openrouter.ai/keys"),
+    ("requesty", "Requesty", "https://router.requesty.ai/v1", "https://app.requesty.ai/api-keys"),
     ("aihubmix", "AiHubMix", "https://aihubmix.com/v1", "https://aihubmix.com"),
     ("siliconflow", "SiliconFlow", "https://api.siliconflow.cn/v1", "https://cloud.siliconflow.cn"),
     # Cloud providers
