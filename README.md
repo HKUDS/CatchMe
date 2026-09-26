@@ -43,6 +43,9 @@
 ##
 
 
+> **`dev` branch: App Garden.** The homepage brings Excel, PowerPoint, Word, WeChat, Claude, ChatGPT and other familiar apps together as cards. Toggle monitoring per app and open its dedicated view: continuous coding-agent sessions, documents, WeChat files, browser history and bookmarks, workspaces, or creative projects. **支持的应用** lists complete app coverage; app details support automatic multi-profile discovery and custom data locations. Advanced data settings retain source controls, raw observations, statistics, and optional LLM analysis. App details now include local CC/Codex sessions and project context, Safari bookmarks/downloads, WeChat file evidence, and an opt-in full monitoring mode for readable foreground content and actions. Collection continues while the local web service runs. The **模型设置 (Models)** page configures providers, tests connectivity, discovers models, and tests generation through your own service/model. See [setup, source coverage, and limitations](docs/activity-infrastructure.md).
+
+
 ## 🎯 Enrich Your Personal Digital Context
 
 <table width="100%">

@@ -63,8 +63,9 @@ def _get_usage_path() -> Path:
 
 def _load_llm_config() -> dict[str, Any]:
     from catchme.services import load_config
+    from catchme.services.models import resolve_llm
 
-    return load_config().get("llm", {})
+    return resolve_llm(load_config())
 
 
 class _CallBudget:
@@ -242,12 +243,20 @@ class LLM:
         model: str | None = None,
         api_key: str | None = None,
         api_url: str | None = None,
+        service: str | None = None,
     ) -> None:
-        cfg = _load_llm_config()
+        if service:
+            from catchme.services import load_config
+            from catchme.services.models import resolve_llm
 
+            cfg = resolve_llm(load_config(), service=service, model=model)
+        else:
+            cfg = _load_llm_config()
+
+        self.service = cfg.get("service", "legacy")
         self.model = model or cfg.get("model") or os.getenv("LLM_MODEL", "gpt-4o-mini")
 
-        self._api_key = api_key or cfg.get("api_key") or os.getenv("OPENAI_API_KEY", "")
+        self._api_key = api_key or cfg.get("api_key") or ("" if cfg.get("service") else os.getenv("OPENAI_API_KEY", ""))
 
         url = api_url or cfg.get("api_url")
         if not url:
@@ -255,6 +264,8 @@ class LLM:
 
             url = get_default_api_url(cfg.get("provider", "openai"))
         self._api_url = url or os.getenv("OPENAI_BASE_URL")
+        if not self._api_key and cfg.get("provider") in ("ollama", "vllm", "lmstudio"):
+            self._api_key = "local"
         self._extra_headers: dict[str, str] = cfg.get("extra_headers") or {}
 
         self._use_responses_api = cfg.get("wire_api") == "responses"

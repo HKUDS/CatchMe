@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,6 +14,8 @@
 <link rel="stylesheet" href="css/tree.css">
 <link rel="stylesheet" href="css/digest.css">
 <link rel="stylesheet" href="css/chat.css">
+<link rel="stylesheet" href="css/activity.css">
+<link rel="stylesheet" href="css/garden.css">
 </head>
 <body>
 
@@ -22,12 +24,13 @@
     <img src="img/catchme_logo.png" alt="CatchMe" class="logo-img">
   </div>
 
-  <button class="nav-btn active" data-page="home"><svg viewBox="0 0 18 18"><circle cx="9" cy="9" r="6.5"/><path d="M9 5.5V9l2.5 1.5"/></svg><span class="lbl">Home</span><span class="nav-shortcut">1</span></button>
-  <button class="nav-btn" data-page="recall"><svg viewBox="0 0 18 18"><rect x="3" y="2" width="12" height="14" rx="2"/><path d="M7 2v14M3 6h4M3 10h4"/></svg><span class="lbl">Recall</span><span class="nav-shortcut">2</span></button>
-  <button class="nav-btn" data-page="explorer"><svg viewBox="0 0 18 18"><circle cx="9" cy="3.5" r="2"/><circle cx="4" cy="13" r="2"/><circle cx="14" cy="13" r="2"/><path d="M9 5.5v3M6.5 11.5L9 8.5l2.5 3"/></svg><span class="lbl">Explorer</span><span class="nav-shortcut">3</span></button>
-  <button class="nav-btn" data-page="chat"><svg viewBox="0 0 18 18"><path d="M16 12a2 2 0 01-2 2H6l-4 4V4a2 2 0 012-2h10a2 2 0 012 2z"/></svg><span class="lbl">Chat</span><span class="nav-shortcut">4</span></button>
-  <button class="nav-btn" data-page="system"><svg viewBox="0 0 18 18"><path d="M2 14h14"/><path d="M4 14V8"/><path d="M7 14V6"/><path d="M10 14V9"/><path d="M13 14V4"/></svg><span class="lbl">System</span><span class="nav-shortcut">5</span></button>
+  <button class="nav-btn active" data-page="home" aria-label="应用乐园" title="应用乐园"><svg viewBox="0 0 18 18"><circle cx="9" cy="9" r="6.5"/><path d="M9 5.5V9l2.5 1.5"/></svg><span class="lbl">应用乐园</span><span class="nav-shortcut">1</span></button>
+  <button class="nav-btn" data-page="recall" aria-label="活动回顾" title="活动回顾"><svg viewBox="0 0 18 18"><rect x="3" y="2" width="12" height="14" rx="2"/><path d="M7 2v14M3 6h4M3 10h4"/></svg><span class="lbl">活动回顾</span><span class="nav-shortcut">2</span></button>
+  <button class="nav-btn" data-page="explorer" aria-label="记忆探索" title="记忆探索"><svg viewBox="0 0 18 18"><circle cx="9" cy="3.5" r="2"/><circle cx="4" cy="13" r="2"/><circle cx="14" cy="13" r="2"/><path d="M9 5.5v3M6.5 11.5L9 8.5l2.5 3"/></svg><span class="lbl">记忆探索</span><span class="nav-shortcut">3</span></button>
+  <button class="nav-btn" data-page="chat" aria-label="问问记忆" title="问问记忆"><svg viewBox="0 0 18 18"><path d="M16 12a2 2 0 01-2 2H6l-4 4V4a2 2 0 012-2h10a2 2 0 012 2z"/></svg><span class="lbl">问问记忆</span><span class="nav-shortcut">4</span></button>
+  <button class="nav-btn" data-page="system" aria-label="采集设置" title="采集设置"><svg viewBox="0 0 18 18"><path d="M2 14h14"/><path d="M4 14V8"/><path d="M7 14V6"/><path d="M10 14V9"/><path d="M13 14V4"/></svg><span class="lbl">采集设置</span><span class="nav-shortcut">5</span></button>
 
+  <button class="nav-btn" data-page="models" aria-label="模型设置" title="模型设置"><svg viewBox="0 0 18 18"><rect x="3" y="3" width="12" height="12" rx="3"/><path d="M6 9h6M9 6v6"/></svg><span class="lbl">模型设置</span></button>
   <div class="spacer"></div>
   <div class="nav-bottom">
     <div class="lang-select-wrap">

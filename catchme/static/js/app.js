@@ -1,5 +1,7 @@
 import { api, showToast } from './utils.js';
-import { renderToday } from './pages/today.js';
+import { renderDashboard, dashboardCleanup } from './pages/dashboard.js';
+import { renderGarden, gardenCleanup } from './pages/garden.js';
+import { renderModels, modelsCleanup } from './pages/models.js';
 import { renderRecall } from './pages/recall.js';
 import { renderExplorer, explorerCleanup } from './pages/explorer.js';
 import { renderSystem, systemCleanup } from './pages/system.js';
@@ -50,16 +52,21 @@ window.setLang = setLang;
 
 /* ── Navigation ── */
 var navFns = {
-  home: renderToday,
+  home: renderGarden,
+  activity: renderDashboard,
   recall: renderRecall,
   explorer: renderExplorer,
   chat: renderChatMain,
+  models: renderModels,
   system: renderSystem
 };
 
 var navKeys = ['home', 'recall', 'explorer', 'chat', 'system'];
 
 function nav(p) {
+  if (page === 'models') modelsCleanup();
+  if (page === 'home') gardenCleanup();
+  if (page === 'activity') dashboardCleanup();
   if (page === 'explorer') explorerCleanup();
   if (page === 'system') systemCleanup();
   if (page === 'chat' && p !== 'chat') renderChat();

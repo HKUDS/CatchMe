@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import shutil
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +31,7 @@ _DEFAULTS: dict[str, Any] = {
         "host": "127.0.0.1",
         "port": 8765,
     },
+    "services": {},
     "llm": {
         "provider": "openai",
         "api_key": "",
@@ -120,6 +123,13 @@ def save_config(cfg: dict[str, Any], path: str | Path | None = None) -> None:
     global _cached_config
     target = Path(path) if path else _get_config_path()
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(cfg, indent=4, ensure_ascii=False) + "\n", "utf-8")
+    fd, temporary = tempfile.mkstemp(dir=target.parent, prefix=".config-", suffix=".json")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as file:
+            file.write(json.dumps(cfg, indent=4, ensure_ascii=False) + "\n")
+        os.replace(temporary, target)
+    finally:
+        if os.path.exists(temporary):
+            os.unlink(temporary)
     _cached_config = cfg
     log.info("config saved to %s", target)

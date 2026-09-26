@@ -32,6 +32,10 @@ def get_store() -> Store:
 
 app = Flask(__name__, static_folder="static", static_url_path="")
 
+from .sources.api import bp as activity_blueprint
+
+app.register_blueprint(activity_blueprint)
+
 
 def _query_events(
     kind: str | None = None,
@@ -191,6 +195,7 @@ def api_config_llm_get():
     llm = dict(cfg.get("llm", {}))
     if llm.get("api_key"):
         llm["api_key"] = "****"
+    llm.pop("extra_headers", None)
     return jsonify(llm)
 
 

@@ -125,3 +125,18 @@ def make_mouse_event(ts: float, action: str = "click", **extra) -> Event:
 
 def make_clipboard_event(ts: float, content: str = "copied") -> Event:
     return Event(timestamp=ts, kind="clipboard", data={"content": content, "type": "text"})
+
+
+@pytest.fixture
+def client(tmp_path, monkeypatch):
+    import catchme.services as svc
+    import catchme.web as web
+    from catchme.config import Config
+
+    cfg = Config(root=tmp_path)
+    cfg.ensure_dirs()
+    monkeypatch.setattr(web, "_config", cfg)
+    monkeypatch.setattr(svc, "_get_config_path", lambda: cfg.config_path)
+    monkeypatch.setattr(svc, "_LEGACY_CONFIG_PATH", tmp_path / "no-legacy.json")
+    monkeypatch.setattr(svc, "_cached_config", None)
+    return web.app.test_client()

@@ -1,5 +1,5 @@
 export function api(p){return fetch(p).then(function(r){return r.json()}).catch(function(){return []})}
-export function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+export function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 export function blobUrl(b){return b?'/blobs/'+b.replace(/^.*blobs\//,''):''}
 export function fmtTs(ts){var d=new Date(ts*1000);return d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'.'+String(d.getMilliseconds()).padStart(3,'0')}
 export function fmtHM(ts){return new Date(ts*1000).toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}

@@ -93,4 +93,4 @@ known-first-party = ["catchme"]
 include = ["catchme*"]
 
 [tool.setuptools.package-data]
-catchme = ["**/*.yaml", "**/*.json"]
+catchme = ["**/*.yaml", "**/*.json", "static/**/*.js", "static/**/*.css", "static/*.html", "static/img/*.png", "static/img/apps/*.png"]

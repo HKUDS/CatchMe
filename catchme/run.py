@@ -299,6 +299,20 @@ def cmd_awake() -> None:
 
     stop = threading.Event()
 
+    def collect_sources():
+        from catchme.sources import ActivityStore
+        from catchme.sources.collect import collect
+
+        activity = ActivityStore(mem.config.root / "activity.db")
+        while not stop.is_set():
+            try:
+                collect(activity)
+            except Exception:
+                logging.exception("activity collection failed")
+            stop.wait(10)
+
+    threading.Thread(target=collect_sources, daemon=True, name="activity-sources").start()
+
     def _handle_signal(sig, frame):
         stop.set()
 
@@ -395,9 +409,15 @@ def cmd_web(port: int | None = None, host: str | None = None) -> None:
 
     logging.getLogger("werkzeug").setLevel(logging.ERROR)
 
-    from catchme.web import app
+    from catchme.sources.live import start_monitor
+    from catchme.sources.store import ActivityStore
+    from catchme.web import app, get_config
 
-    app.run(host=final_host, port=final_port, debug=False, use_reloader=False)
+    monitor = start_monitor(ActivityStore(get_config().root / "activity.db"))
+    try:
+        app.run(host=final_host, port=final_port, debug=False, use_reloader=False)
+    finally:
+        monitor.stop()
 
 
 # ── ask (CLI retrieval) ──
@@ -643,6 +663,8 @@ def _print_help() -> None:
   {BOLD}Commands{RST}
     catchme init               Set up LLM provider & API key
     catchme awake              Start recording (backend)
+    catchme sources scan       Discover apps and activity sources
+    catchme sources watch      Collect enabled sources without screen capture
     catchme web                Start web viewer (frontend)
     catchme web -p 9000        Start web viewer on custom port
     catchme ask -- <question>  Ask about your activity history
@@ -680,6 +702,11 @@ def main() -> None:
 
     if cmd == "init":
         cmd_init()
+
+    elif cmd == "sources":
+        from catchme.sources.cli import main as sources_main
+
+        sources_main(args[1:])
 
     elif cmd == "awake":
         cmd_awake()
