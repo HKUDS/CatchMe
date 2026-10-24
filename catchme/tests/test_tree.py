@@ -10,6 +10,7 @@ from catchme.pipelines.tree import (
     _hash_loc,
     _sanitize_app,
     build_tree,
+    extend_tree,
     load_tree,
     merge_summaries,
     save_tree,
@@ -138,6 +139,32 @@ class TestBuildTree:
     def test_build_empty_store(self, store):
         result = build_tree(store, mode="time")
         assert result["tree"] is None
+
+    def test_extend_app_tree_includes_new_events(self, store):
+        base = 1_700_000_000.0
+        store.insert_raw([make_window_event(base, "Safari", "First synthetic window")])
+        cfg = {"session_gap": 300, "window_min_dwell": 1.0, "action_gap": 3.0}
+
+        with (
+            mock.patch("catchme.pipelines.tree.load_filter_config", return_value={}),
+            mock.patch("catchme.pipelines.tree.time.time", return_value=base + 10),
+        ):
+            existing = build_tree(store, since=base - 1, until=base + 100, mode="app", cfg=cfg)
+        existing["tree"]["children"][0]["summary"] = "retained synthetic summary"
+
+        store.insert_raw([make_window_event(base + 20, "Terminal", "Second synthetic window")])
+        with (
+            mock.patch("catchme.pipelines.tree.load_filter_config", return_value={}),
+            mock.patch("catchme.pipelines.tree.time.time", return_value=base + 30),
+        ):
+            changed = extend_tree(existing, store, since=base + 19, until=base + 100, cfg=cfg)
+
+        assert changed
+        app_summaries = {
+            child["title"]: child.get("summary") for child in existing["tree"]["children"]
+        }
+        assert set(app_summaries) == {"Safari", "Terminal"}
+        assert app_summaries["Safari"] == "retained synthetic summary"
 
 
 # ── save_tree / load_tree ──
