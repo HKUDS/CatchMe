@@ -72,7 +72,7 @@ catchme/
 - **Line length** — 100 characters (enforced by ruff formatter)
 - **Imports** — sorted by ruff/isort; `catchme` recognized as first-party
 - **Tests** — use `tmp_path` / `tmp_root` fixtures; mock external calls (LLM, filesystem); no network access in tests
-- **No secrets** — never commit API keys or `data/config.json`
+- **No secrets** — never commit API keys or local CatchMe config files.
 
 ## What to Contribute
 

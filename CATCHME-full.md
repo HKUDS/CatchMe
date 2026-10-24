@@ -56,7 +56,7 @@ First, find the config path:
 python -c "from catchme.config import get_default_config; print(get_default_config().config_path)"
 ```
 
-This will print something like `.../catchme/data/config.json`.
+By default this is `~/.catchme/config.json` (or `%USERPROFILE%\.catchme\config.json` on Windows). Use the printed path if the config root has been customized.
 
 **Ask the user** for their LLM provider and API key, then write the config:
 
@@ -69,6 +69,8 @@ This will print something like `.../catchme/data/config.json`.
     }
 }
 ```
+
+**Privacy:** When a cloud provider is configured, CatchMe sends activity-derived text and selected screenshots to that endpoint for summarization and retrieval. For offline processing, use an on-device provider and endpoint; custom API URLs may still point to a remote service.
 
 Recommended defaults per provider:
 

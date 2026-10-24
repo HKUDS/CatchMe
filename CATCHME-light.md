@@ -69,9 +69,9 @@ Launch web dashboard (default: `http://127.0.0.1:8765`).
 | `find` returns nothing | catchme is not installed in any conda env |
 | `command not found: catchme` | Wrong env activated — re-run the `find` command above |
 | `ask` returns no results | `catchme awake` not running — check `catchme ram` |
-| LLM errors | Check `data/config.json` in the catchme project root |
+| LLM errors | Check the path printed by `catchme init` (by default `~/.catchme/config.json`, or `%USERPROFILE%\.catchme\config.json` on Windows) |
 
 ## Notes
 
 - `catchme awake` must be running for `ask` to have recent data
-- All data is stored 100% locally — nothing leaves your machine unless a cloud LLM API is configured
+- Data is stored locally by default; when a cloud LLM is configured, activity context and selected screenshots may be sent to that endpoint.
