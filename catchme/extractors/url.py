@@ -174,7 +174,7 @@ def _fetch_pdf(url: str, max_chars: int, ws: Path | None = None) -> str:
         resp = session.get(url, timeout=_TIMEOUT)
         resp.raise_for_status()
 
-        ct = resp.headers.get("content-type", "")
+        ct = resp.headers.get("content-type", "").lower()
         if "pdf" not in ct and len(resp.content) < 1000:
             return ""
 
