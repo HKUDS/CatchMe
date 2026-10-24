@@ -111,6 +111,8 @@ def _apply_structured(node: dict, raw: str) -> None:
     node["summary"] = summary
     if evidence:
         node["evidence"] = evidence
+    else:
+        node.pop("evidence", None)
 
 
 # ── Priority levels for the summary queue ──
