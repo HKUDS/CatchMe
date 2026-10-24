@@ -144,8 +144,8 @@ def extend_tree(
 ) -> bool:
     """Incrementally extend *existing* tree dict with events newer than *since*.
 
-    Only rebuilds the last session (time mode) or the affected app subtrees
-    (app mode).  Returns True if the tree was modified.
+    Rebuilds the last session in time mode. In app mode, rebuilds the existing
+    date range and merges summaries from the prior tree. Returns True if modified.
     """
     tree = existing.get("tree")
     if not tree or not tree.get("children"):
@@ -179,6 +179,17 @@ def extend_tree(
         return _extend_time_tree(
             tree, new_spans, store, since, until, merged_cfg, interaction, action_gap
         )
+
+    if mode == "app":
+        tree_start = tree.get("start", since)
+        rebuilt = build_tree(store, since=tree_start, until=until, mode=mode, cfg=merged_cfg)
+        new_tree = rebuilt.get("tree")
+        if not new_tree:
+            return False
+        merge_summaries(tree, new_tree)
+        existing["tree"] = new_tree
+        return True
+
     return False
 
 
