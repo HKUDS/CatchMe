@@ -42,6 +42,11 @@ def _query_events(
     return get_store().query_raw(kind=kind, since=since, until=until, limit=limit)
 
 
+def _bounded_limit(limit: int, maximum: int) -> int:
+    """Keep API limits within their advertised bounds, including negative inputs."""
+    return min(max(limit, 0), maximum)
+
+
 @app.route("/")
 def index():
     return send_from_directory(app.static_folder, "index.html")
@@ -54,7 +59,7 @@ def api_search():
         return jsonify([])
     kind = request.args.get("kind")
     limit = request.args.get("limit", 100, type=int)
-    events = get_store().search(q, kind=kind or None, limit=min(limit, 500))
+    events = get_store().search(q, kind=kind or None, limit=_bounded_limit(limit, 500))
     return jsonify([_serialize(e) for e in events])
 
 
@@ -67,7 +72,9 @@ def api_events():
     since = request.args.get("since", type=float)
     until = request.args.get("until", type=float)
     limit = request.args.get("limit", 200, type=int)
-    events = _query_events(kind=kind or None, since=since, until=until, limit=min(limit, 2000))
+    events = _query_events(
+        kind=kind or None, since=since, until=until, limit=_bounded_limit(limit, 2000)
+    )
     return jsonify([_serialize(e) for e in events])
 
 
@@ -81,7 +88,7 @@ def api_timeline():
     since = request.args.get("since", type=float)
     until = request.args.get("until", type=float)
     limit = request.args.get("limit", 2000, type=int)
-    events = _query_events(since=since, until=until, limit=min(limit, 5000))
+    events = _query_events(since=since, until=until, limit=_bounded_limit(limit, 5000))
     grouped: dict[str, list] = {}
     for e in events:
         grouped.setdefault(e.kind, []).append(_serialize(e))
