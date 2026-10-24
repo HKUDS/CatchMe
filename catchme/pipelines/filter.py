@@ -234,12 +234,13 @@ def _serialize_keyboard_cluster(c: Cluster) -> dict:
 
 
 def _blob_relative(blob_abs: str) -> str:
-    """Extract path relative to the blobs directory."""
+    """Extract a URL-safe path relative to the blobs directory."""
+    normalized = blob_abs.replace("\\", "/")
     marker = "/blobs/"
-    idx = blob_abs.find(marker)
+    idx = normalized.rfind(marker)
     if idx >= 0:
-        return blob_abs[idx + len(marker) :]
-    return blob_abs
+        return normalized[idx + len(marker) :]
+    return normalized
 
 
 def _serialize_mouse_action(ev: Event) -> dict:
