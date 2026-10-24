@@ -1,8 +1,9 @@
 """Service layer: LLM clients and provider configuration.
 
-Configuration lives in ``data/config.json``.  Load it once with
-:func:`load_config` and pass sections to the service constructors, or let
-them read the file automatically when no explicit arguments are given.
+Configuration lives at the path returned by ``Config.config_path`` (by
+default, ``~/.catchme/config.json``). Load it once with :func:`load_config` and
+pass sections to the service constructors, or let them read the file
+automatically when no explicit arguments are given.
 """
 
 from __future__ import annotations
@@ -79,9 +80,9 @@ def load_config(path: str | Path | None = None, *, reload: bool = False) -> dict
 
     Results are cached; pass *reload=True* to force a re-read.
 
-    On first run, if the config file does not exist at the new location
-    (``data/config.json``) but the legacy path (``services/config.json``)
-    exists, it is automatically migrated.
+    On first run, if the config file does not exist at the default path
+    (``~/.catchme/config.json``) but the legacy package-local path
+    (``services/config.json``) exists, it is automatically migrated.
     """
     global _cached_config
     if _cached_config is not None and not reload:

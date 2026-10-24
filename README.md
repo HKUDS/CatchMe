@@ -156,11 +156,9 @@ CatchMe skips traditional vector search. Instead, the LLM directly navigates you
 ## 🧠 LLM Configuration
 
 ### **❗️ Data Privacy Notice**
-• **100% Local Storage**: All raw data (screenshots, keystrokes, activity trees) stays in ~/data/ and never leaves your machine. 
+• **Local storage**: By default, the event database, screenshots, activity trees, and config are stored under `.catchme` in your home directory (`~/.catchme` on macOS/Linux; `%USERPROFILE%\.catchme` on Windows). Local storage does not imply that model requests stay on-device.
 
-• **Offline-First Options**: Local LLMs (Ollama, vLLM, LM Studio) enable fully offline operation without any cloud dependency.
-
-• **⚠️Cloud Provider Caution**: If used, cloud APIs will be used to summarize your daily activities. **Untrusted endpoints may expose private data** — review data policies of your provider carefully.
+• **LLM data transfer**: Summarization and retrieval send activity-derived text and selected screenshots to the configured LLM endpoint. Cloud endpoints may receive sensitive personal content; review the provider's data policy. For offline processing, use an on-device model endpoint (for example, Ollama, vLLM, or LM Studio); custom API URLs may still point to a remote service.
 
 ### **📋 Requirements**
 • **Multimodal support**: Your model should be able to handle text + images.
