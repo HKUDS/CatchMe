@@ -127,6 +127,20 @@ class TestStoreSearch:
         assert len(results) == 1
         assert results[0].timestamp == 200.0
 
+    def test_fts_punctuation_is_treated_as_keyword_text(self, store):
+        store.insert_raw(
+            [
+                Event(timestamp=1.0, kind="window", data={"title": "C++ guide"}),
+                Event(timestamp=2.0, kind="window", data={"title": "unterminated quote guide"}),
+            ]
+        )
+
+        cpp_results = store.search("C++")
+        assert [event.data["title"] for event in cpp_results] == ["C++ guide"]
+        quoted_results = store.search('"unterminated')
+        assert [event.data["title"] for event in quoted_results] == ["unterminated quote guide"]
+        assert store.search('"') == []
+
     def test_fts_no_match(self, store):
         store.insert_raw(
             [
