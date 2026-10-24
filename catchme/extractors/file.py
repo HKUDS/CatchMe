@@ -79,16 +79,18 @@ def extract_pdf_text(path: str, max_chars: int, max_pages: int = 20) -> str:
         import pymupdf
 
         doc = pymupdf.open(path)
-        pages = []
-        total = 0
-        for page in doc[:max_pages]:
-            text = page.get_text()
-            pages.append(text)
-            total += len(text)
-            if total >= max_chars:
-                break
-        doc.close()
-        return "\n".join(pages)[:max_chars]
+        try:
+            pages = []
+            total = 0
+            for page in doc[:max_pages]:
+                text = page.get_text()
+                pages.append(text)
+                total += len(text)
+                if total >= max_chars:
+                    break
+            return "\n".join(pages)[:max_chars]
+        finally:
+            doc.close()
     except ImportError:
         return ""
     except Exception:
