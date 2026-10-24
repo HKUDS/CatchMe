@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import os
 import shutil
 import subprocess
@@ -37,7 +38,10 @@ def _parse_name_or_title(raw: str) -> str:
         return ""
     val = raw.split("=", 1)[1].strip()
     if val.startswith('"') and val.endswith('"'):
-        val = val[1:-1]
+        try:
+            return ast.literal_eval(val)
+        except (SyntaxError, ValueError):
+            return val[1:-1]
     return val
 
 
