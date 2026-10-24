@@ -541,6 +541,8 @@ class LLM:
         **kwargs,
     ) -> AsyncIterator[str]:
         """Async streaming chat completion.  Yields content-delta strings."""
+        if self._use_responses_api:
+            raise NotImplementedError("streaming is not supported with wire_api='responses'")
         self._check_budget()
         resp = await self.aclient.chat.completions.create(
             model=self.model,
