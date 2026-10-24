@@ -40,6 +40,23 @@ def _require_mcp():
         ) from e
 
 
+def _collect_search(query: str) -> dict:
+    from .pipelines.retrieve import retrieve
+
+    answer = "No relevant information found."
+    sources: list[str] = []
+    for step in retrieve(query):
+        if step.get("type") == "answer":
+            answer = step.get("content", answer)
+            sources = step.get("sources", [])
+    return {"answer": answer, "sources": sources}
+
+
+async def _search_activity(query: str) -> dict:
+    """Run synchronous retrieval without blocking the MCP event loop."""
+    return await asyncio.to_thread(_collect_search, query)
+
+
 def serve() -> None:
     """Start the CatchMe MCP stdio server. Blocks until the host disconnects."""
     _require_mcp()
@@ -48,7 +65,7 @@ def serve() -> None:
     from mcp.server.stdio import stdio_server
     from mcp.types import TextContent, Tool
 
-    from .pipelines.retrieve import _load_all_trees, _node_index, retrieve
+    from .pipelines.retrieve import _load_all_trees, _node_index
 
     server = Server("catchme")
 
@@ -141,18 +158,12 @@ def serve() -> None:
         if not query:
             return [TextContent(type="text", text="Error: query is required.")]
 
-        answer = "No relevant information found."
-        sources: list[str] = []
         try:
-            for step in retrieve(query):
-                if step.get("type") == "answer":
-                    answer = step.get("content", answer)
-                    sources = step.get("sources", [])
+            result = await _search_activity(query)
         except Exception as exc:
             log.exception("retrieve() failed")
             return [TextContent(type="text", text=f"Error during retrieval: {exc}")]
 
-        result = {"answer": answer, "sources": sources}
         return [TextContent(type="text", text=json.dumps(result, ensure_ascii=False, indent=2))]
 
     # ── list_days ────────────────────────────────────────────────────────────
