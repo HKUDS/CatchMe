@@ -45,7 +45,11 @@ def get_document_path(pid: int, title_hint: str) -> str:
         hint = title_hint.split(" — ")[0].split(" - ")[0].strip()
         if not hint:
             return ""
-        for f in proc.open_files():
+        open_files = proc.open_files()
+        for f in open_files:
+            if os.path.basename(f.path) == hint:
+                return f.path
+        for f in open_files:
             if hint in os.path.basename(f.path):
                 return f.path
     except Exception:

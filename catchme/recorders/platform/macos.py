@@ -97,14 +97,15 @@ def get_document_path(pid: int, title_hint: str) -> str:
         if len(parts) >= 2:
             workspace = parts[-1].strip()
 
-        for c in candidates:
-            if os.path.basename(c) == filename and workspace and workspace in c:
+        exact_matches = [c for c in candidates if os.path.basename(c) == filename]
+        for c in exact_matches:
+            if workspace and workspace in c:
                 return c
 
-        for c in candidates:
-            if os.path.basename(c) == filename:
-                return c
-
+        if len(exact_matches) == 1:
+            return exact_matches[0]
+        if len(exact_matches) > 1:
+            return ""
         return candidates[0]
     except Exception:
         return ""
