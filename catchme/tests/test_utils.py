@@ -23,6 +23,28 @@ class TestDirSizeMb:
         size = dir_size_mb(str(tmp_path))
         assert size > 0
 
+    def test_does_not_count_symlink_targets(self, monkeypatch, tmp_path):
+        linked_file = tmp_path / "linked.bin"
+        linked_file.write_bytes(b"x" * 1024)
+        monkeypatch.setattr(
+            "catchme.utils.os.path.islink",
+            lambda path: path == str(linked_file),
+        )
+
+        assert dir_size_mb(str(tmp_path)) == 0.0
+
+    def test_does_not_traverse_junction_targets(self, monkeypatch, tmp_path):
+        linked_dir = tmp_path / "linked"
+        linked_dir.mkdir()
+        (linked_dir / "external.bin").write_bytes(b"x" * 1024)
+        monkeypatch.setattr(
+            "catchme.utils.os.path.isjunction",
+            lambda path: path == str(linked_dir),
+            raising=False,
+        )
+
+        assert dir_size_mb(str(tmp_path)) == 0.0
+
     def test_nonexistent_directory(self):
         assert dir_size_mb("/nonexistent/path/xyzzy") == 0.0
 
