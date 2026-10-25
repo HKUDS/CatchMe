@@ -82,6 +82,7 @@ class KeyboardRecorder:
         self._ax_active = False
         self._last_keydown: float = 0.0
         self._composing = False
+        self._threads: list[threading.Thread] = []
 
     def start(self, emit: Emit) -> None:
         self._running = True
@@ -138,7 +139,10 @@ class KeyboardRecorder:
             self._loop = Quartz.CFRunLoopGetCurrent()
             Quartz.CFRunLoopAddSource(self._loop, src, Quartz.kCFRunLoopDefaultMode)
             Quartz.CGEventTapEnable(tap, True)
-            Quartz.CFRunLoopRun()
+            while self._running:
+                result = Quartz.CFRunLoopRunInMode(Quartz.kCFRunLoopDefaultMode, 0.1, False)
+                if result == Quartz.kCFRunLoopRunFinished:
+                    break
 
         def _run_ax():
             system = AXUIElementCreateSystemWide()
@@ -150,8 +154,12 @@ class KeyboardRecorder:
                 typing = (time.monotonic() - self._last_keydown) < _AX_ACTIVE_WINDOW
                 time.sleep(_AX_POLL_ACTIVE if typing else _AX_POLL_IDLE)
 
-        threading.Thread(target=_run_tap, daemon=True).start()
-        threading.Thread(target=_run_ax, daemon=True).start()
+        self._threads = [
+            threading.Thread(target=_run_tap, daemon=True),
+            threading.Thread(target=_run_ax, daemon=True),
+        ]
+        for thread in self._threads:
+            thread.start()
 
     def _poll_ax(self, system, emit: Emit) -> None:
         err, focused = AXUIElementCopyAttributeValue(system, "AXFocusedUIElement", None)
@@ -214,6 +222,11 @@ class KeyboardRecorder:
         if self._loop:
             Quartz.CFRunLoopStop(self._loop)
             self._loop = None
+        current = threading.current_thread()
+        for thread in self._threads:
+            if thread is not current and thread.ident is not None:
+                thread.join()
+        self._threads.clear()
 
 
 def _mods(flags: int, chars: str) -> list[str]:

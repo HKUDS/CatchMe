@@ -108,7 +108,8 @@ class SummaryQueue:
 
     def stop(self) -> None:
         self._stop.set()
-        self._pool.shutdown(wait=False, cancel_futures=True)
+        self._dispatcher.join()
+        self._pool.shutdown(wait=True, cancel_futures=True)
         self._force_save()
 
     # ── Dispatch loop ──

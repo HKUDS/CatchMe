@@ -26,6 +26,30 @@ class _FakeRecorder(PollingRecorder):
         emit({"seq": self.poll_count})
 
 
+class _InFlightRecorder(PollingRecorder):
+    """Blocks in poll so shutdown races with a final synthetic event."""
+
+    kind = "in_flight"
+    interval = 0
+
+    def __init__(self):
+        super().__init__()
+        self.poll_started = threading.Event()
+        self.release_poll = threading.Event()
+        self.poll_finished = threading.Event()
+        self.stop_requested = threading.Event()
+
+    def poll(self, emit):
+        self.poll_started.set()
+        if self.release_poll.wait(timeout=3):
+            emit({"final": True})
+        self.poll_finished.set()
+
+    def stop(self):
+        self.stop_requested.set()
+        super().stop()
+
+
 class TestEngineBasics:
     def test_emitter_queues_event(self, cfg, store):
         engine = Engine(cfg, store, [])
@@ -123,6 +147,35 @@ class TestEngineBatchWrite:
 
 
 class TestEngineWithFakeRecorder:
+    def test_stop_waits_for_in_flight_poll_before_flushing(self, cfg, store):
+        cfg.batch_timeout = 0.05
+        rec = _InFlightRecorder()
+        engine = Engine(cfg, store, [rec])
+        stop_thread = None
+
+        with mock.patch.object(engine._organizer, "run"):
+            engine.start()
+            assert rec.poll_started.wait(timeout=1)
+            stop_thread = threading.Thread(target=engine.stop, daemon=True)
+            stop_thread.start()
+            try:
+                assert rec.stop_requested.wait(timeout=1)
+                assert not rec.poll_finished.wait(timeout=0.05)
+                stop_thread.join(timeout=1)
+                assert stop_thread.is_alive()
+                rec.release_poll.set()
+                stop_thread.join(timeout=2)
+            finally:
+                rec.release_poll.set()
+                if stop_thread is not None:
+                    stop_thread.join(timeout=3)
+
+        assert stop_thread is not None and not stop_thread.is_alive()
+        assert rec.poll_finished.is_set()
+        rows = store.query_raw(kind=rec.kind)
+        assert len(rows) == 1
+        assert rows[0].data == {"final": True}
+
     def test_recorder_integration(self, cfg, store):
         rec = _FakeRecorder()
         engine = Engine(cfg, store, [rec])

@@ -108,6 +108,7 @@ class KeyboardRecorder:
 
     def __init__(self) -> None:
         self._listener: keyboard.Listener | None = None
+        self._uia_thread: threading.Thread | None = None
         self._running = False
         self._pressed_mods: set = set()
         self._last_keydown: float = 0.0
@@ -149,7 +150,8 @@ class KeyboardRecorder:
         self._listener = keyboard.Listener(on_press=on_press, on_release=on_release)
         self._listener.start()
 
-        threading.Thread(target=self._run_uia, args=(emit,), daemon=True).start()
+        self._uia_thread = threading.Thread(target=self._run_uia, args=(emit,), daemon=True)
+        self._uia_thread.start()
 
     def _run_uia(self, emit: Emit) -> None:
         """Poll the focused text field for value changes via UI Automation."""
@@ -231,8 +233,19 @@ class KeyboardRecorder:
 
     def stop(self) -> None:
         self._running = False
-        if self._listener:
-            self._listener.stop()
+
+        listener = self._listener
+        if listener is not None:
+            listener.stop()
+            if listener.ident is not None and listener is not threading.current_thread():
+                listener.join()
+            self._listener = None
+
+        uia_thread = self._uia_thread
+        if uia_thread is not None:
+            if uia_thread.ident is not None and uia_thread is not threading.current_thread():
+                uia_thread.join()
+            self._uia_thread = None
 
 
 def _current_mods(pressed: set) -> list[str]:

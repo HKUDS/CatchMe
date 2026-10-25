@@ -68,9 +68,9 @@ class Engine:
                 log.exception("failed to stop recorder: %s", rec.kind)
         self._stop.set()
         self._organizer.stop()
-        self._writer.join(timeout=5)
+        self._writer.join()
         if hasattr(self, "_organizer_thread"):
-            self._organizer_thread.join(timeout=5)
+            self._organizer_thread.join()
         self._flush()
 
     # ── Recorder → Working Memory ──

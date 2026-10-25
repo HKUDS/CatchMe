@@ -29,6 +29,7 @@ class Organizer:
         self._last_window_key: tuple | None = None
         self._pending = threading.Event()
         self._stop = threading.Event()
+        self._thread: threading.Thread | None = None
         self._tree_cache: dict | None = None
         self._last_event_ts: float = 0.0
         self._last_build_time: float = 0.0
@@ -62,6 +63,7 @@ class Organizer:
 
     def run(self) -> None:
         """Block until stopped. Waits for boundary events then processes."""
+        self._thread = threading.current_thread()
         while not self._stop.is_set():
             self._pending.wait(timeout=_FALLBACK_INTERVAL)
             if self._stop.is_set():
@@ -75,6 +77,8 @@ class Organizer:
     def stop(self) -> None:
         self._stop.set()
         self._pending.set()
+        if self._thread is not None and self._thread is not threading.current_thread():
+            self._thread.join()
         self._queue.stop()
         self._save_tree()
 

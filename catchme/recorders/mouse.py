@@ -234,7 +234,7 @@ class MouseRecorder:
     # ── Scroll session ──
 
     def _end_scroll_session(self) -> None:
-        """Called by Timer when scroll session times out."""
+        """Close an active scroll session after inactivity or during recorder shutdown."""
         with self._lock:
             if not self._scroll_session_active or not self._last_scroll_data:
                 return
@@ -299,9 +299,16 @@ class MouseRecorder:
         self._listener.start()
 
     def stop(self) -> None:
+        listener = self._listener
+        if listener is not None:
+            listener.stop()
+            if listener.ident is not None and listener is not threading.current_thread():
+                listener.join()
+            self._listener = None
+
         with self._lock:
             if self._scroll_timer is not None:
                 self._scroll_timer.cancel()
                 self._scroll_timer = None
-        if self._listener:
-            self._listener.stop()
+
+        self._end_scroll_session()
