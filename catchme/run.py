@@ -583,6 +583,29 @@ def cmd_disk() -> None:
 # ── ram ──
 
 
+def _is_catchme_cli(name: str, cmdline: list[str]) -> bool:
+    """Recognize the installed CLI or Python's documented module entry point."""
+    import ntpath
+    import re
+
+    def basename(value: str) -> str:
+        return ntpath.basename(value).lower()
+
+    executable = basename(name)
+    if executable in {"catchme", "catchme.exe"}:
+        return True
+    if not cmdline:
+        return False
+    first = basename(cmdline[0])
+    if first in {"catchme", "catchme.exe"}:
+        return True
+    if not re.fullmatch(r"python(?:\d+(?:\.\d+)*)?(?:\.exe)?", first):
+        return False
+    return (len(cmdline) >= 3 and cmdline[1:3] == ["-m", "catchme"]) or (
+        len(cmdline) >= 2 and basename(cmdline[1]) in {"catchme", "catchme.exe"}
+    )
+
+
 def cmd_ram() -> None:
     """Show RAM usage of catchme processes."""
     import os as _os
@@ -597,10 +620,11 @@ def cmd_ram() -> None:
                 info = proc.info
                 if info["pid"] == my_pid:
                     continue
-                cmdline = " ".join(info["cmdline"] or [])
+                args = info["cmdline"] or []
                 name = info["name"] or ""
-                if "catchme" not in cmdline and "catchme" not in name:
+                if not _is_catchme_cli(name, args) or info["memory_info"] is None:
                     continue
+                cmdline = " ".join(args)
                 label = (
                     "web"
                     if "web" in cmdline
