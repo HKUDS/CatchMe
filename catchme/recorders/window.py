@@ -10,9 +10,17 @@ _BROWSERS = {
     "safari",
     "google chrome",
     "chrome",
+    "google-chrome",
+    "google-chrome-stable",
+    "chromium",
+    "chromium-browser",
     "microsoft edge",
+    "microsoft-edge",
+    "microsoft-edge-stable",
+    "msedge",
     "firefox",
     "arc",
+    "brave",
     "brave browser",
     "opera",
 }
@@ -20,7 +28,7 @@ _SYSTEM_IDLE_APPS = {"loginwindow", "screensaverengine", "screensaverenginex"}
 
 
 def _is_browser(app_name: str) -> bool:
-    return app_name.lower() in _BROWSERS
+    return app_name.lower().removesuffix(".exe") in _BROWSERS
 
 
 class WindowRecorder(PollingRecorder):

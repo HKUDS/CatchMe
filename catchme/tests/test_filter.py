@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from catchme.pipelines.filter import (
+    _blob_relative,
     _has_cjk,
+    _serialize_mouse_action,
     _strip_ime_pinyin,
     build_window_spans,
     cluster_events,
@@ -11,6 +13,38 @@ from catchme.pipelines.filter import (
 from catchme.store import Event
 
 from .conftest import make_kb_event, make_window_event
+
+
+class TestBlobPathSerialization:
+    def test_blob_paths_are_relative_for_windows_and_posix(self):
+        expected = "2026-10-24/capture/full.webp"
+        assert (
+            _blob_relative(
+                r"C:\archive\blobs\old\profile\.catchme\blobs\2026-10-24\capture\full.webp"
+            )
+            == expected
+        )
+        assert _blob_relative("/home/alice/.catchme/blobs/2026-10-24/capture/full.webp") == expected
+
+    def test_mouse_action_serializes_blob_paths_for_web_urls(self, tmp_path):
+        blob_dir = tmp_path / "parent" / "blobs" / "2026-10-24" / "capture"
+        blob_dir.mkdir(parents=True)
+        full_path = blob_dir / "full.webp"
+        detail_path = blob_dir / "detail.webp"
+        full_path.write_bytes(b"synthetic full image")
+        detail_path.write_bytes(b"synthetic detail image")
+        event = Event(
+            timestamp=1,
+            kind="mouse",
+            data={"detail": str(detail_path)},
+            blob=str(full_path),
+        )
+
+        serialized = _serialize_mouse_action(event)
+
+        assert serialized["full"] == "2026-10-24/capture/full.webp"
+        assert serialized["detail"] == "2026-10-24/capture/detail.webp"
+
 
 # ── build_window_spans ──
 

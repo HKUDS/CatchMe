@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sqlite3
 import threading
 from dataclasses import dataclass
@@ -116,8 +117,14 @@ class Store:
         until: float | None = None,
         limit: int = 100,
     ) -> list[Event]:
+        # Treat input as keyword text, not FTS5 grammar; punctuation such as
+        # `C++` or an unmatched quote must not break the search endpoint.
+        terms = re.findall(r"[^\W_]+", text)
+        if not terms:
+            return []
+        match_query = " ".join(f'"{term}"' for term in terms)
         clauses = ["events_raw_fts MATCH ?"]
-        params: list = [text]
+        params: list = [match_query]
         if kind:
             clauses.append("e.kind = ?")
             params.append(kind)

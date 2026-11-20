@@ -145,7 +145,7 @@ class Organizer:
     def _enqueue_closed_nodes(self, tree: dict) -> None:
         from .pipelines.summarize import KIND_TO_LEVEL
 
-        self._walk_enqueue(tree, is_last_sibling=False, parent=None, kind_to_level=KIND_TO_LEVEL)
+        self._walk_enqueue(tree, is_last_sibling=True, parent=None, kind_to_level=KIND_TO_LEVEL)
 
     def _walk_enqueue(
         self,
@@ -153,11 +153,19 @@ class Organizer:
         is_last_sibling: bool,
         parent: dict | None,
         kind_to_level: dict,
+        ancestor_closed: bool = False,
     ) -> None:
+        is_closed = ancestor_closed or not is_last_sibling
         children = node.get("children", [])
         for i, ch in enumerate(children):
             child_is_last = i == len(children) - 1
-            self._walk_enqueue(ch, child_is_last, parent=node, kind_to_level=kind_to_level)
+            self._walk_enqueue(
+                ch,
+                child_is_last,
+                parent=node,
+                kind_to_level=kind_to_level,
+                ancestor_closed=is_closed,
+            )
 
         kind = node.get("kind", "")
         if kind not in kind_to_level:
@@ -167,7 +175,6 @@ class Organizer:
         if parent:
             self._queue.register_parent(nid, parent)
 
-        is_closed = not is_last_sibling
         if is_closed:
             self._queue.mark_closed(nid)
 

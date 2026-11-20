@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from catchme.extractors.file import read_file_content
+import sys
+import types
+
+from catchme.extractors.file import extract_pdf_text, read_file_content
 
 
 class TestReadFileContent:
@@ -57,6 +60,28 @@ class TestReadFileContent:
         f.write_text("# 你好世界\nprint('hello')", encoding="utf-8")
         content, ftype = read_file_content(str(f))
         assert "你好世界" in content
+
+    def test_pdf_document_closes_when_page_extraction_fails(self, monkeypatch):
+        class FailingPage:
+            def get_text(self):
+                raise RuntimeError("synthetic extraction failure")
+
+        class FakeDocument:
+            closed = False
+
+            def __getitem__(self, _page_slice):
+                return [FailingPage()]
+
+            def close(self):
+                self.closed = True
+
+        document = FakeDocument()
+        pymupdf = types.ModuleType("pymupdf")
+        pymupdf.open = lambda _path: document
+        monkeypatch.setitem(sys.modules, "pymupdf", pymupdf)
+
+        assert extract_pdf_text("synthetic.pdf", max_chars=100) == ""
+        assert document.closed
 
     def test_unknown_extension_reads_as_text(self, tmp_path):
         f = tmp_path / "data.xyz"

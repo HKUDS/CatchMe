@@ -18,6 +18,11 @@ _IS_MAC = sys.platform == "darwin"
 # ── Platform helpers ──
 
 
+def _elapsed_milliseconds(current_tick: int, last_input_tick: int) -> int:
+    """Return a wrap-safe difference between DWORD tick values."""
+    return (current_tick - last_input_tick) & 0xFFFFFFFF
+
+
 def _seconds_since_last_input() -> float:
     if _IS_MAC:
         from Quartz.CoreGraphics import (
@@ -42,7 +47,7 @@ def _seconds_since_last_input() -> float:
         lii = LASTINPUTINFO()
         lii.cbSize = ctypes.sizeof(LASTINPUTINFO)
         if ctypes.windll.user32.GetLastInputInfo(ctypes.byref(lii)):
-            millis = ctypes.windll.kernel32.GetTickCount() - lii.dwTime
+            millis = _elapsed_milliseconds(ctypes.windll.kernel32.GetTickCount(), lii.dwTime)
             return millis / 1000.0
         return 0.0
 

@@ -3,6 +3,20 @@
 from __future__ import annotations
 
 import os
+import stat
+
+
+def _is_junction(path: str) -> bool:
+    isjunction = getattr(os.path, "isjunction", None)
+    if isjunction is not None:
+        return isjunction(path)
+    if os.name != "nt":
+        return False
+    try:
+        attributes = os.lstat(path).st_file_attributes
+    except OSError:
+        return False
+    return bool(attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT)
 
 
 def dir_size_mb(path: str) -> float:
